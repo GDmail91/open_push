@@ -1,0 +1,9 @@
+# npm package ignore
+node_modules
+
+# idea ignore
+.idea
+
+# credentials dependencies list ignore
+credentials.js
+models/schema.json
