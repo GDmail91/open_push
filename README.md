@@ -24,7 +24,6 @@ If you want join us please be contact.
 GDmail91@gmail.com
 
 ***
-open_push wiki 입니다!
 
 ## Open Push(OP) 프로젝트의 첫번째 버전 입니다.
 
