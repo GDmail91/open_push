@@ -3,8 +3,10 @@
  */
 var routes = require('./routes/index');
 var admin = require('./routes/admin');
+var user = require('./routes/user');
 
 module.exports = function(app){
     app.use('/', routes);
     app.use('/admin', admin);
+    app.use('/user', user);
 };
