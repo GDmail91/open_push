@@ -3,36 +3,34 @@
  */
 var mongoose = require('mongoose');
 var crypto = require('crypto');
-var autoIncrement = require('mongoose-auto-increment');
 var schema = require('./schema');
 
-autoIncrement.initialize(mongoose.connection);
-
 var messageSchema = mongoose.Schema(schema.message_schema);
-
-// set _id as number
-messageSchema.plugin(autoIncrement.plugin, 'Message');
-
 // get message by id
-messageSchema.statics.getById = function(data, callback) {
-    Message.findById(data.user_id, function(err, result) {
-        var User = require('./user_model');
-        User.getById({user_id: result.user_id}, function(user_result, data) {
-            if (user_result) {
-                result.user_id = data.user_id;
-                callback(true, result);
+messageSchema.statics.getList = function(data, done) {
+    if (data.term == undefined) data.term = 5;
+    if (data.message_id) {
+        Message.findById(data.message_id, function(err, result) {
+            // ID 기준으로 내림차순 정렬, 상위 5개
+            if(err || result.length == 0) {
+                done(false, err);
             } else {
-                // TODO duplicated
-                // ID로 검색이안됬을 경우 이름으로 검색( 추후 삭제)
-                User.getByName({user_email: result.user_email}, function(user_result, data) {
-                    if(user_result) {
-                        result.user_email = data.user_email;
-                        callback(true, result);
-                    } else return callback(false, data);
+                Message.find({'_id': {$lt: result._id}}).sort({_id: -1}).limit(data.term).find(function (err, result) {
+                    if (err) done(false, err);
+                    else done(true, result);
                 });
             }
         });
-    });
+    } else { // if no have 'startId' searching at the recent database
+        // ID 기준으로 내림차순 정렬, 상위 5개
+        Message.find().sort({_id: -1}).limit(data.term).find(function(err,result){
+            if(err) {
+                done(false, err);
+            }
+            else if (result.length == 0) done(true, '데이터가 없습니다.');
+            else done(true, result);
+        });
+    }
 };
 
 // posting message
@@ -40,9 +38,7 @@ messageSchema.statics.postMessage = function(data, callback) {
     new Message({
         topic: data.topic,
         message: data.message,
-        user_id: data.user_id,
-        type: data.type,
-        qos: data.qos
+        sender: data.sender
     }).save(function(err, message) {
         if (err) callback(false, err);
         else callback(true, message.id);

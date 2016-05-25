@@ -1,6 +1,7 @@
 /**
  * Created by YS on 2016-05-20.
  */
+/*
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 
@@ -21,4 +22,4 @@ exports.setup = function () {
             }
         }
     ));
-};
+};*/

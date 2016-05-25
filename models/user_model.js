@@ -9,6 +9,23 @@ var schema = require('./schema');
 var userSchema = mongoose.Schema(schema.user_schema);
 userSchema.index({ _id: 1 }, { unique: true });
 
+// User setting
+userSchema.statics.setUser = function(data, done) {
+    new User({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        level: data.level || "3rd_party",
+        exp_date: data.exp_date,
+        alias: data.alias
+    }).save(function(err, user) {
+        if (err) {
+            done({ result: false, msg: "Something went wrong while saving the thing" });
+            console.log(err);
+        }
+        else done({ result: true, msg: "User data was successfully saved: user id is ["+user._id+"]", data: { user_id: user._id }});
+    });
+};
+
 // User list getter
 userSchema.statics.getList = function(data, done) {
     if (data.term == undefined) data.term = 5;
@@ -37,8 +54,8 @@ userSchema.statics.getList = function(data, done) {
 };
 
 // User info getter
-userSchema.statics.getByName = function(data, done) {
-    User.findOne({'user_email':data.user_email}, function(err, result) {
+userSchema.statics.getByAlias = function(data, done) {
+    User.findOne({'alias':data.alias}, function(err, result) {
         if (err) {
             done(false, '사용자 검색 에러');
         } else {

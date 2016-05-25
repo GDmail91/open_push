@@ -9,7 +9,27 @@ var mqttServer = require('./mqtt/mqtt_server');
 
 var routes = require('./routes');
 
+var credentials = require('./credentials.js');
+
 var app = express();
+
+// database configuration
+var mongoose = require('mongoose');
+var options = {
+  server: {
+    socketOptions: { keepAlive: 1 }
+  }
+};
+switch(app.get('env')){
+  case 'development':
+    mongoose.connect(credentials.mongo.development.connectionString+"/open_push", options);
+    break;
+  case 'production':
+    mongoose.connect(credentials.mongo.production.connectionString+"/open_push", options);
+    break;
+  default:
+    throw new Error('Unknown execution environment: ' + app.get('env'));
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

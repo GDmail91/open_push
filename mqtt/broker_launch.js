@@ -2,11 +2,21 @@
  * Created by YS on 2016-05-11.
  */
 var mosca = require('mosca');
+var credentials = require('../credentials');
 
 module.exports = function broker_launch() {
+    var pubsubSettings = {
+        //using ascoltatore
+        type: 'mongo',
+        url: credentials.mongo.development.connectionString+"/mqtt",
+        pubsubCollection: 'ascoltatori',
+        mongo: {}
+    };
+
     // set open port number
     var settings = {
-        port: 1883
+        port: 1883,
+        backend: pubsubSettings
     };
 
     // start mosca
@@ -29,6 +39,7 @@ module.exports = function broker_launch() {
             }
         };
 
+        // Only authorized user can publish
         server.authorizePublish = function(client, topic, payload, callback) {
             console.log('[Auth Pub] : ', client.user);
             // TODO Connecting Auth user DB
@@ -50,7 +61,7 @@ module.exports = function broker_launch() {
     // fired when a message is received
     server.on('published', function (packet, client) {
         // Generate regular expression for switch topic
-        var regexp = /[A-Za-z]+\/[A-Za-z]+$/;
+        var regexp = /[A-Za-z0-1]+\/[A-Za-z0-1]+$/;
         var topic = packet.topic.match(regexp);
         switch (topic[0]) {
             case 'new/clients':
@@ -64,6 +75,9 @@ module.exports = function broker_launch() {
                 break;
             case 'garage/state':
                 console.log('[Published] Info Garage State : ', packet.payload.toString('utf8'));
+                break;
+            case 'test/tester001':
+                console.log('[Published] Info test : ', packet.payload.toString('utf8'));
                 break;
         }
     });
