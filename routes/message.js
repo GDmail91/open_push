@@ -49,11 +49,13 @@ router.post('/', function(req, res, next) {
 
     async.waterfall([
         function(callback) {
-            if (data.access_token != 'test') callback({status: 400, msg: 'access_token 인증 실패'});
-            else {
-                data.sender = 'test';
-                callback(null);
-            }
+            var user_model = require('../models/user_model');
+            user_model.isAuth(data.access_token, function(result, msg) {
+                if (result) {
+                    data.sender = msg.alias;
+                    callback(null);
+                } else callback({status: 400, msg: 'access_token 인증 실패'});
+            });
         },
         function(callback) {
             var message_model = require('../models/message_model.js');
@@ -67,7 +69,7 @@ router.post('/', function(req, res, next) {
         },
         function(callback) {
             var mqttServer = require('../mqtt/mqtt_server');
-            console.log(data);
+            mqttServer.mqtt_create(data.access_token, data.sender);
             var result = mqttServer.mqtt_publishing(data.topic, JSON.parse(data.message));
             if (result.result) {
                 callback(null, result.msg);

@@ -20,9 +20,16 @@ var client;
 // Publishing server
 // mqtt server activating
 var mqtt_server = {
-    mqtt_create : function () {
+    mqtt_create : function (access_token, username) {
+        var settings = {
+            keepalive: 1000,
+            protocolId: 'MQIsdp',
+            protocolVersion: 3,
+            access_token: access_token,
+            username: username,
+            password: access_token
+        };
         client = mqtt.createClient(port, host, settings);
-        //return client;
     },
 
     mqtt_publishing : function(topic, message) {

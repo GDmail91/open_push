@@ -77,6 +77,18 @@ userSchema.statics.getById = function(data, done) {
     });
 };
 
+// Check auth
+userSchema.statics.isAuth = function(access_token, done) {
+    User.findOne({access_token: access_token}, function(err, result) {
+        if (err) {
+            done(false, '사용자 검색 에러');
+        } else {
+            if(result == null) done(false, '사용자 없음');
+            else done(true, result);
+        }
+    });
+};
+
 var User = mongoose.model('User', userSchema);
 
 

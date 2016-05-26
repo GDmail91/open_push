@@ -29,26 +29,31 @@ module.exports = function broker_launch() {
             console.log('[Auth] : ', username, ", ", password.toString('utf8'));
             // TODO Authentication
             // TODO if don't need authorize username then set client.user by client id
-            var authorized = ((username === 'alice' || username === 'bob' || username === 'client-1') && password.toString('utf8') === 'secret');
-            if (authorized) {
-                client.user = username;
+            var user_model = require('../models/user_model');
+            user_model.isAuth(password, function(authorized) {
+                if (authorized) {
+                    client.user = username;
+                    client.access_token = password.toString('utf8');
+                } else {
+                    client.user = client.id;
+                    client.access_token = password.toString('utf8');
+                }
                 callback(null, true);
-            } else {
-                client.user = client.id;
-                callback(null, true);
-            }
+            });
         };
 
         // Only authorized user can publish
         server.authorizePublish = function(client, topic, payload, callback) {
             console.log('[Auth Pub] : ', client.user);
             // TODO Connecting Auth user DB
-            var authorized = (client.user === 'alice');
-            if (authorized) {
-                callback(null, true);
-            } else {
-                callback(null, false);
-            }
+            var user_model = require('../models/user_model');
+            user_model.isAuth(client.access_token, function(authorized) {
+                if (authorized) {
+                    callback(null, true);
+                } else {
+                    callback(null, false);
+                }
+            });
         };
         console.log('Mosca server is up and running at port('+settings.port+')')
     });

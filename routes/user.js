@@ -2,6 +2,7 @@
  * Created by YS on 2016-05-20.
  */
 var express = require('express');
+var async = require('async');
 //var passport = require('passport');
 
 // Setting passport
@@ -9,11 +10,11 @@ var express = require('express');
 
 var router = express.Router();
 
-/* GET login routing */
-router.get('/login', function(req, res, next) {
+/* POST login routing */
+router.post('/login', function(req, res, next) {
     var data = {
-        'email': req.query.email,
-        'password': req.query.password
+        'email': req.body.email,
+        'password': req.body.password
     };
 
     if (data.email == 'test@test.com' && data.password == '1234') {
@@ -26,6 +27,40 @@ router.get('/login', function(req, res, next) {
         res.statusCode = 401;
         res.send("Not matched");
     }
+});
+
+// TODO remove
+/* POST temp auth */
+router.post('/auth', function(req, res, next) {
+    if (req.body.level != '3rd_party' && req.body.level != 'admin') {
+        res.statusCode = 401;
+        return res.send("validation error");
+    }
+    var data = {
+        'access_token': req.body.access_token,
+        'refresh_token': req.body.refresh_token,
+        'exp_date': req.body.exp_date,
+        'level': req.body.level,
+        'alias': req.body.alias
+    };
+
+    async.waterfall([
+        function(callback) {
+            var user_model = require('../models/user_model');
+            user_model.setUser(data, function(result, data) {
+                if (result) callback({status: 400, msg: '사용자 정보저장 실패'});
+                else {
+                    data.sender = data.alias;
+                    callback(null);
+                }
+            });
+        }], function(err, result) {
+        if (err) {
+            res.statusCode = err.status;
+            return res.json({ result: false, msg: err.msg })
+        }
+        res.json({ result: true, msg: result });
+    });
 });
 
 /* POST when redirected by oauth server */
